@@ -1,0 +1,32 @@
+12:38:06 **** Incremental Build of configuration Debug for project F405Uart ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F405xx -c -I../Core/Inc -I../Bsp -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:152:41: warning: implicit declaration of function 'printf' [-Wimplicit-function-declaration]
+  152 |                                         printf("Y20%02d.M%02d.D%02d %02d:%02d:%02d\r\n",
+      |                                         ^~~~~~
+../Core/Src/main.c:22:1: note: include '<stdio.h>' or provide a declaration of 'printf'
+   21 | #include "board.h"
+  +++ |+#include <stdio.h>
+   22 | /* Private includes ----------------------------------------------------------*/
+../Core/Src/main.c:152:41: warning: incompatible implicit declaration of built-in function 'printf' [-Wbuiltin-declaration-mismatch]
+  152 |                                         printf("Y20%02d.M%02d.D%02d %02d:%02d:%02d\r\n",
+      |                                         ^~~~~~
+../Core/Src/main.c:152:41: note: include '<stdio.h>' or provide a declaration of 'printf'
+../Core/Src/main.c:140:35: warning: unused variable 'text' [-Wunused-variable]
+  140 |                           uint8_t text[30];
+      |                                   ^~~~
+arm-none-eabi-gcc -o "F405Uart.elf" @"objects.list"   -mcpu=cortex-m4 -T"/home/taowang/workspace/STM32CubeIDE/F405Uart/STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F405Uart.map" -Wl,--gc-sections -static -L../Bsp --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: F405Uart.elf
+ 
+arm-none-eabi-size  F405Uart.elf 
+arm-none-eabi-objdump -h -S F405Uart.elf  > "F405Uart.list"
+arm-none-eabi-objcopy  -O ihex F405Uart.elf  "F405Uart.hex"
+   text	   data	    bss	    dec	    hex	filename
+  14932	    104	   2016	  17052	   429c	F405Uart.elf
+Finished building: default.size.stdout
+ 
+Finished building: F405Uart.hex
+ 
+Finished building: F405Uart.list
+ 
