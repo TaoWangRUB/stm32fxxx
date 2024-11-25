@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "board.h"
+#include "lcd.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -108,7 +109,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   board_button_init();
   board_led_init();
-
+  // LCD_Test():
   uint32_t tick,tick_now;
   tick = HAL_GetTick() + 200;
   tick_now = HAL_GetTick();

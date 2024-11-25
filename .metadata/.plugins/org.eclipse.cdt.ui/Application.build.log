@@ -1,21 +1,6 @@
-14:47:43 **** Incremental Build of configuration Debug for project Application ****
-make -j16 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
-arm-none-eabi-gcc -o "Application.elf" @"objects.list"   -mcpu=cortex-m3 -T"/home/taowang/workspace/STM32CubeIDE/Application/STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Application.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Core/Src/subdir.mk:34: warning: pattern recipe did not update peer target 'Core/Src/main.cyclo'.
-Finished building target: Application.elf
- 
-arm-none-eabi-size  Application.elf 
-arm-none-eabi-objdump -h -S Application.elf  > "Application.list"
-arm-none-eabi-objcopy  -O binary Application.elf  "Application.bin"
-   text	   data	    bss	    dec	    hex	filename
-  10232	    108	   1980	  12320	   3020	Application.elf
-Finished building: default.size.stdout
- 
-Finished building: Application.bin
- 
-Finished building: Application.list
- 
+16:53:57 **** Incremental Build of configuration Debug for project Application ****
+make -j7 all 
+"make -j7 all" terminated with exit code -1. Build might be incomplete.
 
-14:47:44 Build Finished. 0 errors, 1 warnings. (took 487ms)
+16:53:57 Build Finished. 0 errors, 0 warnings. (took 350ms)
 

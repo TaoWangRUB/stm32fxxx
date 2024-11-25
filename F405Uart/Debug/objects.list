@@ -1,3 +1,8 @@
+"./Bsp/ST7735/lcd.o"
+"./Bsp/ST7735/logo_128_160.o"
+"./Bsp/ST7735/logo_160_80.o"
+"./Bsp/ST7735/st7735.o"
+"./Bsp/ST7735/st7735_reg.o"
 "./Bsp/board.o"
 "./Core/Src/main.o"
 "./Core/Src/stm32f4xx_hal_msp.o"

@@ -64,8 +64,8 @@ all: main-build
 main-build: F405_LCD.elf secondary-outputs
 
 # Tool invocations
-F405_LCD.elf F405_LCD.map: $(OBJS) $(USER_OBJS) /home/taowang/workspace/STM32CubeIDE/F405_LCD/STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "F405_LCD.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/taowang/workspace/STM32CubeIDE/F405_LCD/STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F405_LCD.map" -Wl,--gc-sections -static -L/home/taowang/workspace/STM32CubeIDE/F405_LCD/Bsp --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+F405_LCD.elf F405_LCD.map: $(OBJS) $(USER_OBJS) /Users/archer/workplace/stm32fxxx/F405_LCD/STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "F405_LCD.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/archer/workplace/stm32fxxx/F405_LCD/STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F405_LCD.map" -Wl,--gc-sections -static -L/home/taowang/workspace/STM32CubeIDE/F405_LCD/Bsp --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
