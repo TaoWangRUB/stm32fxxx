@@ -3,4 +3,7 @@
 *.d
 *.cyclo
 *.su
-
+**/.settings/
+**/.cproject
+**/.mxproject
+**/.project
