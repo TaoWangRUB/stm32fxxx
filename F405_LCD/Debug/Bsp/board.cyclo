@@ -1,7 +1,0 @@
-../Bsp/board.c:12:6:board_button_init	1
-../Bsp/board.c:26:9:board_button_getstate	1
-../Bsp/board.c:31:6:board_led_init	1
-../Bsp/board.c:49:6:board_led_toggle	1
-../Bsp/board.c:54:6:board_led_set	2
-../Bsp/board.c:62:6:board_sd_detect_init	1
-../Bsp/board.c:76:9:board_sd_detect_getstate	1

@@ -12,7 +12,7 @@ RM := rm -rf
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
--include Bsp/ST7735/subdir.mk
+-include Bsp/MPU6050/subdir.mk
 -include Bsp/subdir.mk
 -include objects.mk
 
@@ -65,8 +65,8 @@ all: main-build
 main-build: F405Uart.elf secondary-outputs
 
 # Tool invocations
-F405Uart.elf F405Uart.map: $(OBJS) $(USER_OBJS) /Users/archer/workplace/stm32fxxx/F405Uart/STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "F405Uart.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/archer/workplace/stm32fxxx/F405Uart/STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F405Uart.map" -Wl,--gc-sections -static -L../Bsp --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+F405Uart.elf F405Uart.map: $(OBJS) $(USER_OBJS) /home/taowang/workspace/STM32CubeIDE/F405Uart/STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "F405Uart.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/taowang/workspace/STM32CubeIDE/F405Uart/STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F405Uart.map" -Wl,--gc-sections -static -L../Bsp --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

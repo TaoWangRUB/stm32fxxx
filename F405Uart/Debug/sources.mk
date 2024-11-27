@@ -23,7 +23,7 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-Bsp/ST7735 \
+Bsp/MPU6050 \
 Bsp \
 Core/Src \
 Core/Startup \
