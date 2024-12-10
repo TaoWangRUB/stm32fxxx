@@ -235,7 +235,8 @@ void StartLcdTask(void *argument)
 	  }
 	  // printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
 	  // printf("%.5f, %.5f, %.5f\r\n", ICM20948.acce[0], ICM20948.acce[1], ICM20948.acce[2]);
-
+	  //printf(" Mx: %.5f My: %.5f Mz: %.5f\r\n", ICM20948.mage[0], ICM20948.mage[1], ICM20948.mage[2]);
+	  printf("Temp: %.5f, Pressure: %.5f\r\n", BMP280.temp, BMP280.press);
 	  osDelay(50);
 	}
   /* USER CODE END StartLcdTask */
@@ -284,11 +285,15 @@ void StartTaskIcm20948(void *argument)
 		  ICM20948_ReadDMA(&ICM20948);
 		  if (xSemaphoreTake(dmaCompleteSemaphore, portMAX_DELAY) == pdTRUE) {
 			  ICM20948_Process_Gyro_data(&ICM20948);
-		      //printf("MPU6050 Ax: %d Ay: %d Az: %d\r\n", ax, ay, az);
+		      //printf("ICM20948 Ax: %d Ay: %d Az: %d\r\n", ax, ay, az);
 		  }
 		  // then read mag
 		  current_i2c_dma_state = I2C_DMA_STATE_ICM20948_MAG;
-		  //Magnetometer_ReadDMA(&ICM20948);
+		  Magnetometer_ReadDMA(&ICM20948);
+		  if (xSemaphoreTake(dmaCompleteSemaphore, portMAX_DELAY) == pdTRUE) {
+			  ICM20948_Process_Mage_data(&ICM20948);
+		      //printf("ICM20948 Mx: %d My: %d Mz: %d\r\n", ICM20948.mage[0], ICM20948.mage[1], ICM20948.mage[2]);
+		  }
 		  osDelay(10);
 	  }
   /* USER CODE END StartTaskIcm20948 */
@@ -325,7 +330,12 @@ void StartTaskBmp280(void *argument)
   /* Infinite loop */
 	for(;;)
 	{
-		//current_i2c_dma_state = I2C_DMA_STATE_BMP280;
+		current_i2c_dma_state = I2C_DMA_STATE_BMP280;
+		//BMP280_ReadTempAndPressure(&BMP280);
+		BMP280_Read_DMA(&BMP280);
+		if (xSemaphoreTake(dmaCompleteSemaphore, portMAX_DELAY) == pdTRUE) {
+			BMP280_Process_data(&BMP280);
+		}
 		osDelay(10);
 	}
   /* USER CODE END StartTaskBmp280 */

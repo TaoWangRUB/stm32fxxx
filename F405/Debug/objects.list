@@ -1,3 +1,4 @@
+"./Bsp/BMP280/bmp280.o"
 "./Bsp/ICM20948/icm20948.o"
 "./Bsp/IMU10DOF/Waveshare_10Dof-D.o"
 "./Bsp/MPU6050/mpu6050.o"

@@ -54,6 +54,7 @@
 /* USER CODE BEGIN PV */
 MPU6050_t MPU6050;
 ICM20948_t ICM20948;
+BMP280_t BMP280;
 volatile I2C_DMA_State current_i2c_dma_state = I2C_DMA_STATE_NONE;
 SemaphoreHandle_t dmaCompleteSemaphore;
 /* USER CODE END PV */
@@ -124,10 +125,16 @@ int main(void)
 	  printf("init icm20948 fails\r\n");
   }
 
+  if(BMP280_Init(&BMP280) != HAL_OK)
+  {
+	  printf("init bmp280 fails\r\n");
+  }
+
   ssd1306_Init();
   ssd1306_WriteString("Hello World", Font_7x10);
   ssd1306_UpdateScreen();
 
+/*
   IMU_EN_SENSOR_TYPE enMotionSensorType, enPressureType;
   IMU_ST_ANGLES_DATA stAngles;
   IMU_ST_SENSOR_DATA stGyroRawData;
@@ -135,7 +142,6 @@ int main(void)
   IMU_ST_SENSOR_DATA stMagnRawData;
   int32_t s32PressureVal = 0, s32TemperatureVal = 0, s32AltitudeVal = 0;
 
-/*
   imuInit(&enMotionSensorType, &enPressureType);
   if(IMU_EN_SENSOR_TYPE_ICM20948 == enMotionSensorType)
   {

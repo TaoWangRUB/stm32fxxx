@@ -247,9 +247,9 @@ void Magnetometer_ReadDMA(ICM20948_t* imu_data) {
 void ICM20948_Process_Mage_data(ICM20948_t* imu_data)
 {
 	uint8_t *buff = imu_data->magn_buff;
-	uint8_t *mag = imu_data->mage;
+	float *mag = imu_data->mage;
 	// Read Magnetometer Data
-	mag[0] = (int16_t)((buff[0] << 8) | buff[1]) * 0.15f; // Convert raw data to µT
-	mag[1] = (int16_t)((buff[2] << 8) | buff[3]) * 0.15f;
-	mag[2] = (int16_t)((buff[4] << 8) | buff[5]) * 0.15f;
+	mag[0] = (int16_t)((buff[1] << 8) | buff[0]) * 0.15f; // Convert raw data to µT
+	mag[1] = (int16_t)((buff[3] << 8) | buff[2]) * 0.15f;
+	mag[2] = (int16_t)((buff[5] << 8) | buff[4]) * 0.15f;
 }
