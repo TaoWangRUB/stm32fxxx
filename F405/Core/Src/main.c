@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "dma.h"
 #include "i2c.h"
 #include "rtc.h"
 #include "usart.h"
@@ -28,7 +29,7 @@
 /* USER CODE BEGIN Includes */
 #include "board.h"
 #include <stdio.h>
-#include "MPU6050/mpu6050.h"
+//#include "MPU6050/mpu6050.h"
 #include "IMU10DOF/Waveshare_10Dof-D.h"
 #include "OLED/ssd1306.h"
 /* USER CODE END Includes */
@@ -52,6 +53,9 @@
 
 /* USER CODE BEGIN PV */
 MPU6050_t MPU6050;
+ICM20948_t ICM20948;
+volatile I2C_DMA_State current_i2c_dma_state = I2C_DMA_STATE_NONE;
+SemaphoreHandle_t dmaCompleteSemaphore;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,12 +111,19 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_RTC_Init();
   MX_USART1_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   I2C_Scan();
   while (MPU6050_Init(&hi2c1) == 1);
+
+  if(ICM20948_Init() != HAL_OK)
+  {
+	  printf("init icm20948 fails\r\n");
+  }
+
   ssd1306_Init();
   ssd1306_WriteString("Hello World", Font_7x10);
   ssd1306_UpdateScreen();
@@ -124,6 +135,7 @@ int main(void)
   IMU_ST_SENSOR_DATA stMagnRawData;
   int32_t s32PressureVal = 0, s32TemperatureVal = 0, s32AltitudeVal = 0;
 
+/*
   imuInit(&enMotionSensorType, &enPressureType);
   if(IMU_EN_SENSOR_TYPE_ICM20948 == enMotionSensorType)
   {
@@ -141,13 +153,10 @@ int main(void)
   {
 	  printf("Pressure sersor NULL\r\n");
   }
-
+*/
   board_button_init();
   board_led_init();
 
-  uint32_t tick,tick_now;
-  tick = HAL_GetTick() + 200;
-  tick_now = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -168,54 +177,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  tick_now = HAL_GetTick();
-	  if(board_button_getstate())
-	  {
-		  if(tick_now >= tick)
-		  {
-			  tick = tick_now + 200;
-			  board_led_toggle();
-		  }
-	  }
-	  else
-	  {
-		  if(tick_now >= tick)
-		  {
-			  MPU6050_Read_All(&hi2c1, &MPU6050);
-			  //printf("Ax: %.5f Ay: %.5f Az: %.5f\r\n", MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
-			  Display_Accel_Data(MPU6050.Ax, MPU6050.Ay, MPU6050.Az, 0);
-			  imuDataGet( &stAngles, &stGyroRawData, &stAccelRawData, &stMagnRawData);
-			  pressSensorDataGet(&s32TemperatureVal, &s32PressureVal, &s32AltitudeVal);
-			  Display_Accel_Data(-stAccelRawData.s16Y/16384., stAccelRawData.s16X/16384., stAccelRawData.s16Z/16384., 1);
 
-			  tick = tick_now + 50;
-			  RTC_DateTypeDef sdatestructureget;
-			  RTC_TimeTypeDef stimestructureget;
-			  static uint8_t Seconds_o;
-
-			  /* Get the RTC current Time */
-			  HAL_RTC_GetTime(&hrtc, &stimestructureget, RTC_FORMAT_BIN);
-			  /* Get the RTC current Date */
-			  HAL_RTC_GetDate(&hrtc, &sdatestructureget, RTC_FORMAT_BIN);
- 			  if(Seconds_o != stimestructureget.Seconds)
-  			  {
-
- 				  Seconds_o = stimestructureget.Seconds;
- 				  /*printf("Y20%02d.M%02d.D%02d %02d:%02d:%02d\r\n",
-	  					sdatestructureget.Year,
-	  					sdatestructureget.Month,
-	  					sdatestructureget.Date,
-	  					stimestructureget.Hours,
-	  					stimestructureget.Minutes,
-	  					stimestructureget.Seconds);*/
- 				  board_led_set(1);
-  			  }
-	  		  else
-	  		  {
-	  			  board_led_set(0);
-	  		  }
-		  }
-	  }
   }
   /* USER CODE END 3 */
 }
@@ -291,52 +253,85 @@ void I2C_Scan(void)
     printf("Scanning I2C DONE!...\r\n");
 }
 
-void Display_Accel_Data(double Ax, double Ay, double Az, uint8_t col) {
-    char buffer[20];  // Buffer to hold the text
-    uint8_t len = 75;
+void Display_Accel_Data(void) {
     // Clear the screen
     ssd1306_Clear();
+    char buffer[20];  // Buffer to hold the text
+    uint8_t len = 75;
 
-    if(!col)
-    {
-    	// Display the Ax value
-    	snprintf(buffer, sizeof(buffer), "x:%8.5f|", Ax);
-		ssd1306_SetCursor(0, 0);
-		ssd1306_WriteString(buffer, Font_7x10);
+	// Display the Ax value
+	snprintf(buffer, sizeof(buffer), "x:%8.5f|%8.5f", MPU6050.Ax, ICM20948.acce[0]);
+	ssd1306_SetCursor(0, 0);
+	ssd1306_WriteString(buffer, Font_7x10);
 
-		// Display the Ay value
-		snprintf(buffer, sizeof(buffer), "y:%8.5f|", Ay);
-		ssd1306_SetCursor(0, 10);
-		ssd1306_WriteString(buffer, Font_7x10);
+	// Display the Ay value
+	snprintf(buffer, sizeof(buffer), "y:%8.5f|%8.5f", MPU6050.Ay, ICM20948.acce[1]);
+	ssd1306_SetCursor(0, 10);
+	ssd1306_WriteString(buffer, Font_7x10);
 
-		// Display the Az value
-		snprintf(buffer, sizeof(buffer), "z:%8.5f|", Az);
-		ssd1306_SetCursor(0, 20);
-		ssd1306_WriteString(buffer, Font_7x10);
+	// Display the Az value
+	snprintf(buffer, sizeof(buffer), "z:%8.5f|%8.5f", MPU6050.Az, ICM20948.acce[2]);
+	ssd1306_SetCursor(0, 20);
+	ssd1306_WriteString(buffer, Font_7x10);
+
+	// Update the screen
+	ssd1306_UpdateScreen();
+
+}
+
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
+    if (hi2c->Instance == I2C1) {
+    	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    	xSemaphoreGiveFromISR(dmaCompleteSemaphore, &xHigherPriorityTaskWoken);
+    	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
     }
-    else
-    {
-    	// Display the Ax value
-		snprintf(buffer, sizeof(buffer), "%8.5f", Ax);
-		ssd1306_SetCursor(len, 0);
-		ssd1306_WriteString(buffer, Font_7x10);
-
-		// Display the Ay value
-		snprintf(buffer, sizeof(buffer), "%8.5f", Ay);
-		ssd1306_SetCursor(len, 10);
-		ssd1306_WriteString(buffer, Font_7x10);
-
-		// Display the Az value
-		snprintf(buffer, sizeof(buffer), "%8.5f", Az);
-		ssd1306_SetCursor(len, 20);
-		ssd1306_WriteString(buffer, Font_7x10);
+}
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
+    if (hi2c->Instance == I2C1) {
+    	switch (current_i2c_dma_state)
+		{
+			case I2C_DMA_STATE_MPU6050:
+				printf("mpu6050 i2c error");
+				break;
+			case I2C_DMA_STATE_ICM20948_ACCEL_GYRO:
+				printf("icm20948 gyro i2c error");
+				break;
+			case I2C_DMA_STATE_ICM20948_MAG:
+				printf("icm20948 mag i2c error");
+				break;
+			case I2C_DMA_STATE_BMP280:
+				printf("icm20948 bmp280 i2c error");
+				break;
+			case I2C_DMA_STATE_NONE:
+			default:
+				printf("Unexpected I2C DMA state!\r\n");
+				break;
+		}
     }
-
-
-    // Update the screen
-    ssd1306_UpdateScreen();
 }
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.

@@ -23,6 +23,7 @@ OBJCOPY_BIN :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+Bsp/ICM20948 \
 Bsp/IMU10DOF \
 Bsp/MPU6050 \
 Bsp/OLED \

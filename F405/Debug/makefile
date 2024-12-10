@@ -19,6 +19,7 @@ RM := rm -rf
 -include Bsp/OLED/subdir.mk
 -include Bsp/MPU6050/subdir.mk
 -include Bsp/IMU10DOF/subdir.mk
+-include Bsp/ICM20948/subdir.mk
 -include Bsp/subdir.mk
 -include objects.mk
 
