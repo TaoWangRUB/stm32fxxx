@@ -260,8 +260,8 @@ void StartLcdTask(void *argument)
 	  */
 	  //printf(" Mx: %.5f My: %.5f Mz: %.5f\r\n", ICM20948.mage[0], ICM20948.mage[1], ICM20948.mage[2]);
 	  //printf("Temp: %.5f | %.5f\r\n", MPU6050.Temperature, BMP280.temp);
-	  printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.angle[0], MPU6050.angle[1], MPU6050.angle[2]);
-	  printf("%.5f, %.5f, %.5f\r\n", -ICM20948.angle[1], ICM20948.angle[0], ICM20948.angle[2]);
+	  // printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.angle[0], MPU6050.angle[1], MPU6050.angle[2]);
+	  // printf("%.5f, %.5f, %.5f\r\n", ICM20948.angle[1], -ICM20948.angle[0], ICM20948.angle[2]);
 	  osDelay(50);
 	}
   /* USER CODE END StartLcdTask */

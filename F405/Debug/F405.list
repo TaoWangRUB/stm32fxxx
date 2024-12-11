@@ -5118,17 +5118,17 @@ void StartLcdTask(void *argument)
  8002b5a:	4631      	mov	r1, r6
  8002b5c:	4819      	ldr	r0, [pc, #100]	@ (8002bc4 <StartLcdTask+0x118>)
  8002b5e:	f00a fe15 	bl	800d78c <iprintf>
-	  printf("%.5f, %.5f, %.5f\r\n", -ICM20948.angle[1], ICM20948.angle[0], ICM20948.angle[2]);
+	  printf("%.5f, %.5f, %.5f\r\n", ICM20948.angle[1], -ICM20948.angle[0], ICM20948.angle[2]);
  8002b62:	4b19      	ldr	r3, [pc, #100]	@ (8002bc8 <StartLcdTask+0x11c>)
- 8002b64:	edd3 7a15 	vldr	s15, [r3, #84]	@ 0x54
- 8002b68:	eef1 7a67 	vneg.f32	s15, s15
- 8002b6c:	ee17 3a90 	vmov	r3, s15
- 8002b70:	4618      	mov	r0, r3
- 8002b72:	f7fd fce9 	bl	8000548 <__aeabi_f2d>
- 8002b76:	4680      	mov	r8, r0
- 8002b78:	4689      	mov	r9, r1
- 8002b7a:	4b13      	ldr	r3, [pc, #76]	@ (8002bc8 <StartLcdTask+0x11c>)
- 8002b7c:	6d1b      	ldr	r3, [r3, #80]	@ 0x50
+ 8002b64:	6d5b      	ldr	r3, [r3, #84]	@ 0x54
+ 8002b66:	4618      	mov	r0, r3
+ 8002b68:	f7fd fcee 	bl	8000548 <__aeabi_f2d>
+ 8002b6c:	4680      	mov	r8, r0
+ 8002b6e:	4689      	mov	r9, r1
+ 8002b70:	4b15      	ldr	r3, [pc, #84]	@ (8002bc8 <StartLcdTask+0x11c>)
+ 8002b72:	edd3 7a14 	vldr	s15, [r3, #80]	@ 0x50
+ 8002b76:	eef1 7a67 	vneg.f32	s15, s15
+ 8002b7a:	ee17 3a90 	vmov	r3, s15
  8002b7e:	4618      	mov	r0, r3
  8002b80:	f7fd fce2 	bl	8000548 <__aeabi_f2d>
  8002b84:	4604      	mov	r4, r0
