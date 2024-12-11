@@ -122,6 +122,11 @@ uint8_t MPU6050_Init(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct)
         // calibrate gyro
         _MPU6050_Gyro_Calib(DataStruct);
         printf("MPU6050 done gyro calib\r\n");
+
+        DataStruct->kalmanRoll[0] = 0.;
+        DataStruct->kalmanRoll[1] = 2*2;
+        DataStruct->kalmanPitch[0] = 0.;
+        DataStruct->kalmanPitch[1] = 2*2;
         return 0;
     }
 

@@ -262,9 +262,12 @@ void StartLcdTask(void *argument)
 	  //printf("Temp: %.5f | %.5f\r\n", MPU6050.Temperature, BMP280.temp);
 	  // printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.angle[0], MPU6050.angle[1], MPU6050.angle[2]);
 	  // printf("%.5f, %.5f, %.5f\r\n", ICM20948.angle[1], -ICM20948.angle[0], ICM20948.angle[2]);
+	  printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.kalmanRoll[0], MPU6050.kalmanRoll[2], MPU6050.angle[0]);
+	  printf("%.5f, %.5f, %.5f\r\n", MPU6050.kalmanPitch[0], MPU6050.kalmanPitch[2], MPU6050.angle[1]);
 	  osDelay(50);
 	}
   /* USER CODE END StartLcdTask */
+
 }
 
 /* USER CODE BEGIN Header_StartTaskMpu6050 */
@@ -339,6 +342,8 @@ void StartTaskKalmanFilter(void *argument)
 	  {
 		  angle_estimation(MPU6050.acce, MPU6050.angle);
 		  angle_estimation(ICM20948.acce, ICM20948.angle);
+		  angle_estimation_kalman(MPU6050.gyro[0], MPU6050.angle[0], MPU6050.kalmanRoll);
+		  angle_estimation_kalman(MPU6050.gyro[1], MPU6050.angle[1], MPU6050.kalmanPitch);
 		  osDelay(10);
 	  }
   /* USER CODE END StartTaskKalmanFilter */

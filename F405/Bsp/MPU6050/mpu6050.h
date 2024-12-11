@@ -17,6 +17,9 @@ typedef struct
     float Temperature;
 
     float angle[3];
+
+    float kalmanRoll[3];
+    float kalmanPitch[3];
     uint8_t is_reading;
 } MPU6050_t;
 
