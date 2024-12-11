@@ -227,9 +227,9 @@ void StartButtonTask(void *argument)
 /* USER CODE END Header_StartLcdTask */
 void StartLcdTask(void *argument)
 {
+  /* USER CODE BEGIN StartLcdTask */
 	static uint8_t display = 1;
 	static uint8_t is_pressed = 0;
-  /* USER CODE BEGIN StartLcdTask */
   /* Infinite loop */
 	for(;;)
 	{
