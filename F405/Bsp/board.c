@@ -23,7 +23,7 @@ void board_button_init(void)
   HAL_GPIO_Init(KEY_GPIO_Port, &GPIO_InitStruct);
 }
 
-uint8_t board_button_getstate(void)
+uint8_t board_button_pressed(void)
 {
   return HAL_GPIO_ReadPin(KEY_GPIO_Port,KEY_Pin)==GPIO_PIN_SET?1:0;
 }

@@ -31,11 +31,28 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "MPU6050/mpu6050.h"
+#include "ICM20948/icm20948.h"
+#include "BMP280/bmp280.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+extern MPU6050_t MPU6050;
+extern ICM20948_t ICM20948;
+extern BMP280_t BMP280;
+typedef enum {
+    I2C_DMA_STATE_NONE = 0,
+    I2C_DMA_STATE_MPU6050,
+    I2C_DMA_STATE_ICM20948_ACCEL_GYRO,
+    I2C_DMA_STATE_ICM20948_MAG,
+    I2C_DMA_STATE_BMP280
+} I2C_DMA_State;
+
+extern volatile I2C_DMA_State current_i2c_dma_state;
+extern SemaphoreHandle_t dmaCompleteSemaphore;
 
 /* USER CODE END ET */
 
@@ -53,6 +70,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void Display_Accel_Data(void);
 
 /* USER CODE END EFP */
 

@@ -39,7 +39,7 @@ extern "C"
 #endif
 
     void board_button_init(void);
-    uint8_t board_button_getstate(void);
+    uint8_t board_button_pressed(void);
     void board_led_init(void);
     void board_led_toggle(void);
     void board_led_set(uint8_t set);

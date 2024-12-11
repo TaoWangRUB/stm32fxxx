@@ -19,14 +19,22 @@ MAP_FILES :=
 S_DEPS := 
 S_UPPER_DEPS := 
 C_DEPS := 
+OBJCOPY_BIN := 
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+Bsp/BMP280 \
+Bsp/ICM20948 \
 Bsp/IMU10DOF \
 Bsp/MPU6050 \
 Bsp/OLED \
 Bsp \
 Core/Src \
 Core/Startup \
+Core/algo \
 Drivers/STM32F4xx_HAL_Driver/Src \
+Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 \
+Middlewares/Third_Party/FreeRTOS/Source \
+Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang \
 
