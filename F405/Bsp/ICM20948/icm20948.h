@@ -82,14 +82,18 @@ typedef struct icm20948_type_def
 {
 	uint8_t acc_gyro_buff[14];	 // 6 bytes for accel, 6 for gyro, 2 for temp
 	uint8_t magn_buff[6];		 // 6 bytes for magnetic
+	int16_t acce_raw[3];
+	int16_t gyro_raw[3];
+	float gyro_offset[3];
 	float acce[3];
 	float gyro[3];
 	float mage[3];
+	float angle[3];
     uint8_t is_reading;
 } ICM20948_t;
 
 // Initialization function
-uint8_t ICM20948_Init(void);
+uint8_t ICM20948_Init(ICM20948_t* imu_data);
 
 void ICM20948_ReadDMA(ICM20948_t* imu_data);
 

@@ -118,9 +118,9 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   I2C_Scan();
-  while (MPU6050_Init(&hi2c1) == 1);
+  while (MPU6050_Init(&hi2c1, &MPU6050) == 1);
 
-  if(ICM20948_Init() != HAL_OK)
+  if(ICM20948_Init(&ICM20948) != HAL_OK)
   {
 	  printf("init icm20948 fails\r\n");
   }
@@ -266,17 +266,17 @@ void Display_Accel_Data(void) {
     uint8_t len = 75;
 
 	// Display the Ax value
-	snprintf(buffer, sizeof(buffer), "x:%8.5f|%8.5f", MPU6050.Ax, ICM20948.acce[0]);
+	snprintf(buffer, sizeof(buffer), "x:%8.5f|%8.5f", MPU6050.acce[0], -(ICM20948.acce[1]));
 	ssd1306_SetCursor(0, 0);
 	ssd1306_WriteString(buffer, Font_7x10);
 
 	// Display the Ay value
-	snprintf(buffer, sizeof(buffer), "y:%8.5f|%8.5f", MPU6050.Ay, ICM20948.acce[1]);
+	snprintf(buffer, sizeof(buffer), "y:%8.5f|%8.5f", MPU6050.acce[1], ICM20948.acce[0]);
 	ssd1306_SetCursor(0, 10);
 	ssd1306_WriteString(buffer, Font_7x10);
 
 	// Display the Az value
-	snprintf(buffer, sizeof(buffer), "z:%8.5f|%8.5f", MPU6050.Az, ICM20948.acce[2]);
+	snprintf(buffer, sizeof(buffer), "z:%8.5f|%8.5f", MPU6050.acce[2], ICM20948.acce[2]);
 	ssd1306_SetCursor(0, 20);
 	ssd1306_WriteString(buffer, Font_7x10);
 
@@ -285,6 +285,31 @@ void Display_Accel_Data(void) {
 
 }
 
+void Display_Gyro_Data(void) {
+    // Clear the screen
+    ssd1306_Clear();
+    char buffer[20];  // Buffer to hold the text
+    uint8_t len = 75;
+
+	// Display the Ax value
+	snprintf(buffer, sizeof(buffer), "x:%8.5f|%8.5f", MPU6050.gyro[0], -ICM20948.gyro[1]);
+	ssd1306_SetCursor(0, 0);
+	ssd1306_WriteString(buffer, Font_7x10);
+
+	// Display the Ay value
+	snprintf(buffer, sizeof(buffer), "y:%8.5f|%8.5f", MPU6050.gyro[1], ICM20948.gyro[0]);
+	ssd1306_SetCursor(0, 10);
+	ssd1306_WriteString(buffer, Font_7x10);
+
+	// Display the Az value
+	snprintf(buffer, sizeof(buffer), "z:%8.5f|%8.5f", MPU6050.gyro[2], ICM20948.gyro[2]);
+	ssd1306_SetCursor(0, 20);
+	ssd1306_WriteString(buffer, Font_7x10);
+
+	// Update the screen
+	ssd1306_UpdateScreen();
+
+}
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
     if (hi2c->Instance == I2C1) {
     	BaseType_t xHigherPriorityTaskWoken = pdFALSE;

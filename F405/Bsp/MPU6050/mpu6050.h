@@ -7,24 +7,16 @@
 typedef struct
 {
 	uint8_t mpu6050_raw[14];
-    int16_t Accel_X_RAW;
-    int16_t Accel_Y_RAW;
-    int16_t Accel_Z_RAW;
-    double Ax;
-    double Ay;
-    double Az;
+    int16_t acce_raw[3];
+    float acce[3];
 
-    int16_t Gyro_X_RAW;
-    int16_t Gyro_Y_RAW;
-    int16_t Gyro_Z_RAW;
-    double Gx;
-    double Gy;
-    double Gz;
+    int16_t gyro_raw[3];
+    float gyro[3];
+    float gyro_offset[3];
 
     float Temperature;
 
-    double KalmanAngleX;
-    double KalmanAngleY;
+    float angle[3];
     uint8_t is_reading;
 } MPU6050_t;
 
@@ -39,7 +31,7 @@ typedef struct
     double P[2][2];
 } Kalman_t;
 
-uint8_t MPU6050_Init(I2C_HandleTypeDef *I2Cx);
+uint8_t MPU6050_Init(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct);
 
 void MPU6050_Read_Accel(I2C_HandleTypeDef *I2Cx, MPU6050_t *DataStruct);
 

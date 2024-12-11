@@ -9,7 +9,36 @@
 #include "icm20948.h"
 #include "i2c.h"
 
-int16_t gyro_offset[3] ={0,0,0};
+void _ICM20948_Read_Gyro(ICM20948_t* imu_data)
+{
+	uint8_t * buff = imu_data->acc_gyro_buff;
+	HAL_I2C_Mem_Read(&hi2c1, ICM20948_ADDR, ICM20948_ACCEL_XOUT_H, I2C_MEMADD_SIZE_8BIT, buff, 14, 1000);
+	imu_data->acce_raw[0] = (int16_t)((buff[0] << 8) | buff[1]);
+	imu_data->acce_raw[1] = (int16_t)((buff[2] << 8) | buff[3]);
+	imu_data->acce_raw[2] = (int16_t)((buff[4] << 8) | buff[5]);
+
+	// Read Gyroscope Data
+	imu_data->gyro_raw[0] = (int16_t)((buff[8] << 8) | buff[9]);
+	imu_data->gyro_raw[1] = (int16_t)((buff[10] << 8) | buff[11]);
+	imu_data->gyro_raw[2] = (int16_t)((buff[12] << 8) | buff[13]);
+	return;
+}
+
+static void _ICM20948_Gyro_Calib(ICM20948_t* imu_data)
+{
+	const uint16_t Num = 2000;
+	for(uint16_t i = 0; i < Num; i ++)
+	{
+		_ICM20948_Read_Gyro(imu_data);
+		for(uint8_t i = 0; i < 3; ++i)
+			imu_data->gyro_offset[i] += imu_data->gyro_raw[i];
+		HAL_Delay(2);
+	}
+	for(uint8_t i = 0; i < 3; ++i)
+		imu_data->gyro_offset[i] /= Num;
+	printf("%.5f %.5f %.5f\r\n", imu_data->gyro_offset[0]/65.5, imu_data->gyro_offset[1]/65.5, imu_data->gyro_offset[2]/65.5);
+	return;
+}
 
 // Function to write to a register
 HAL_StatusTypeDef ICM20948_WriteRegister(I2C_HandleTypeDef *hi2c, uint8_t reg, uint8_t data) {
@@ -27,7 +56,7 @@ HAL_StatusTypeDef ICM20948_SwitchBank(I2C_HandleTypeDef *hi2c, uint8_t bank) {
 }
 
 // Initialization function
-HAL_StatusTypeDef ICM20948_Init(void) {
+HAL_StatusTypeDef ICM20948_Init(ICM20948_t* imu_data) {
     uint8_t data;
 
     // Reset ICM20948
@@ -42,13 +71,13 @@ HAL_StatusTypeDef ICM20948_Init(void) {
     ICM20948_WriteRegister(&hi2c1, ICM20948_REG_BANK_SEL, ICM20948_USER_BANK_2);
 
     // Configure gyroscope
-    ICM20948_WriteRegister(&hi2c1, ICM20948_GYRO_SMPLRT_DIV, 0x07);
+    ICM20948_WriteRegister(&hi2c1, ICM20948_GYRO_SMPLRT_DIV, 0x09);
     ICM20948_WriteRegister(&hi2c1, ICM20948_GYRO_CONFIG,
-                      REG_VAL_BIT_GYRO_DLPCFG_6 | REG_VAL_BIT_GYRO_FS_1000DPS | REG_VAL_BIT_GYRO_DLPF);
+                      REG_VAL_BIT_GYRO_DLPCFG_2 | REG_VAL_BIT_GYRO_FS_500DPS | REG_VAL_BIT_GYRO_DLPF);
     // Configure accelerometer
-    ICM20948_WriteRegister(&hi2c1, ICM20948_ACCEL_SMPLRT_DIV,  0x07);
+    ICM20948_WriteRegister(&hi2c1, ICM20948_ACCEL_SMPLRT_DIV,  0x09);
     ICM20948_WriteRegister(&hi2c1, ICM20948_ACCEL_CONFIG,
-                      REG_VAL_BIT_ACCEL_DLPCFG_6 | REG_VAL_BIT_ACCEL_FS_2g | REG_VAL_BIT_ACCEL_DLPF);
+                      REG_VAL_BIT_ACCEL_DLPCFG_2 | REG_VAL_BIT_ACCEL_FS_2g | REG_VAL_BIT_ACCEL_DLPF);
 
     /* user bank 0 register */
     ICM20948_WriteRegister(&hi2c1, ICM20948_REG_BANK_SEL, ICM20948_USER_BANK_0);
@@ -59,40 +88,9 @@ HAL_StatusTypeDef ICM20948_Init(void) {
     if (data != 0xEA) {
         return HAL_ERROR; // Failed to detect ICM20948
     }
-
-    uint8_t i;
-    int16_t s16Gx = 0, s16Gy = 0, s16Gz = 0;
-    int32_t s32TempGx = 0, s32TempGy = 0, s32TempGz = 0;
-	for(i = 0; i < 32; i ++)
-	{
-		icm20948GyroRead(&s16Gx, &s16Gy, &s16Gz);
-		s32TempGx += s16Gx;
-		s32TempGy += s16Gy;
-		s32TempGz += s16Gz;
-		HAL_Delay(10);
-	}
-	gyro_offset[0] = s32TempGx >> 5;
-	gyro_offset[1] = s32TempGy >> 5;
-	gyro_offset[2] = s32TempGz >> 5;
-
+    _ICM20948_Gyro_Calib(imu_data);
+    printf("ICM20948 done gyro calib\r\n");
     return Magnetometer_Init();
-}
-
-void ICM20948_Read_Gyro(int16_t* gyro)
-{
-	uint8_t u8Buf[14];
-
-	HAL_I2C_Mem_Read(&hi2c1, ICM20948_ADDR, ICM20948_ACCEL_XOUT_H, I2C_MEMADD_SIZE_8BIT, u8Buf, 14, 1000);
-	/*
-	for(i = 0; i < 3; i ++)
-	{
-		icm20948CalAvgValue(&sstAvgBuf[i].u8Index, sstAvgBuf[i].s16AvgBuffer, s16Buf[i], s32OutBuf + i);
-	}
-	*ps16X = s32OutBuf[0] - gstGyroOffset.s16X;
-	*ps16Y = s32OutBuf[1] - gstGyroOffset.s16Y;
-	*ps16Z = s32OutBuf[2] - gstGyroOffset.s16Z;
-	*/
-	return;
 }
 
 void ICM20948_ReadDMA(ICM20948_t* imu_data) {
@@ -103,14 +101,19 @@ void ICM20948_Process_Gyro_data(ICM20948_t* imu_data)
 {
 	uint8_t *buff = imu_data->acc_gyro_buff;
 	// Read Accelerometer Data
-	imu_data->acce[0] = (int16_t)((buff[0] << 8) | buff[1]) / 16384.0f; // Convert raw data to g
-	imu_data->acce[1] = (int16_t)((buff[2] << 8) | buff[3]) / 16384.0f;
-	imu_data->acce[2] = (int16_t)((buff[4] << 8) | buff[5]) / 16384.0f;
-
+	imu_data->acce_raw[0] = (int16_t)((buff[0] << 8) | buff[1]);
+	imu_data->acce_raw[1] = (int16_t)((buff[2] << 8) | buff[3]);
+	imu_data->acce_raw[2] = (int16_t)((buff[4] << 8) | buff[5]);
+	for(uint8_t i = 0; i < 3; ++i)
+		imu_data->acce[i] = imu_data->acce_raw[i] / 16384.0f; // Convert raw data to g
 	// Read Gyroscope Data
-	imu_data->gyro[0] = (int16_t)((buff[8] << 8) | buff[9]) / 131.0f; // Convert raw data to dps
-	imu_data->gyro[1] = (int16_t)((buff[10] << 8) | buff[11]) / 131.0f;
-	imu_data->gyro[2] = (int16_t)((buff[12] << 8) | buff[13]) / 131.0f;
+	imu_data->gyro_raw[0] = (int16_t)((buff[8] << 8) | buff[9]);
+	imu_data->gyro_raw[1] = (int16_t)((buff[10] << 8) | buff[11]);
+	imu_data->gyro_raw[2] = (int16_t)((buff[12] << 8) | buff[13]);
+	for(uint8_t i = 0; i < 3; ++i)
+	{
+		imu_data->gyro[i] = (imu_data->gyro_raw[i] - imu_data->gyro_offset[i]) / 65.5f; // Convert raw data to dps
+	}
 
 }
 

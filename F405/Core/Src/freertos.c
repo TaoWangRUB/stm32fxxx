@@ -26,6 +26,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "i2c.h"
+#include "algo/angle_estimation.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -225,18 +227,41 @@ void StartButtonTask(void *argument)
 /* USER CODE END Header_StartLcdTask */
 void StartLcdTask(void *argument)
 {
+	static uint8_t display = 1;
+	static uint8_t is_pressed = 0;
   /* USER CODE BEGIN StartLcdTask */
   /* Infinite loop */
 	for(;;)
 	{
-	  if(1)
+	  if(board_button_pressed() && !is_pressed)
 	  {
-		  Display_Accel_Data();
+		  is_pressed = 1;
 	  }
-	  // printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
-	  // printf("%.5f, %.5f, %.5f\r\n", ICM20948.acce[0], ICM20948.acce[1], ICM20948.acce[2]);
+	  else if(!board_button_pressed() && is_pressed)
+	  {
+		  display = display? 0:1;
+		  is_pressed = 0;
+		  printf("change display\r\n");
+	  }
+	  switch (display)
+	  {
+	  	  case 1:
+	  		  Display_Gyro_Data();
+	  		  break;
+	  	  default:
+	  		  Display_Accel_Data();
+	  		  break;
+	  }
+	  /*
+	  printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.acce[0], MPU6050.acce[1], MPU6050.acce[2]);
+	  printf("%.5f, %.5f, %.5f, ", MPU6050.gyro[0], MPU6050.gyro[1], MPU6050.gyro[2]);
+	  printf("%.5f, %.5f, %.5f ", ICM20948.acce[0], ICM20948.acce[1], ICM20948.acce[2]);
+	  printf("%.5f, %.5f, %.5f\r\n", ICM20948.gyro[0], ICM20948.gyro[1], ICM20948.gyro[2]);
+	  */
 	  //printf(" Mx: %.5f My: %.5f Mz: %.5f\r\n", ICM20948.mage[0], ICM20948.mage[1], ICM20948.mage[2]);
-	  printf("Temp: %.5f, Pressure: %.5f\r\n", BMP280.temp, BMP280.press);
+	  //printf("Temp: %.5f | %.5f\r\n", MPU6050.Temperature, BMP280.temp);
+	  printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.angle[0], MPU6050.angle[1], MPU6050.angle[2]);
+	  printf("%.5f, %.5f, %.5f\r\n", -ICM20948.angle[1], ICM20948.angle[0], ICM20948.angle[2]);
 	  osDelay(50);
 	}
   /* USER CODE END StartLcdTask */
@@ -312,7 +337,9 @@ void StartTaskKalmanFilter(void *argument)
   /* Infinite loop */
 	  for(;;)
 	  {
-		osDelay(10);
+		  angle_estimation(MPU6050.acce, MPU6050.angle);
+		  angle_estimation(ICM20948.acce, ICM20948.angle);
+		  osDelay(10);
 	  }
   /* USER CODE END StartTaskKalmanFilter */
 }
