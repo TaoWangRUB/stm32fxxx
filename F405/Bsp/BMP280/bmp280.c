@@ -18,6 +18,18 @@ static HAL_StatusTypeDef BMP280_WriteRegister(uint8_t reg, uint8_t value) {
     return HAL_I2C_Mem_Write(&hi2c1, BMP280_I2C_ADDR, reg, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
 }
 
+static calibrate_altitude(BMP280_t *bmp) {
+	const uint16_t Num = 1000;
+	for (uint16_t i = 0; i < Num; ++i) {
+		BMP280_ReadTempAndPressure(bmp);
+		//BMP280_ReadPressure(bmp, &(bmp->press));
+		bmp->altitude_offset += bmp->altitude;
+		HAL_Delay(10);
+	}
+	bmp->altitude_offset /= Num;
+	printf("Altitude offset: %.5f\r\n", bmp->altitude_offset);
+	return;
+}
 // BMP280 Initialization
 uint8_t BMP280_Init(BMP280_t *bmp) {
     uint8_t id;
@@ -36,6 +48,14 @@ uint8_t BMP280_Init(BMP280_t *bmp) {
         return HAL_ERROR;
     }
     HAL_Delay(100);
+
+    // Set oversampling and power mode
+    config[0] = BMP280_OSRS_T | BMP280_OSRS_P | BMP280_MODE_NORMAL;
+    config[1] = 0x14; // Standby time 1000ms, filter on
+    if (BMP280_WriteRegister(BMP280_REG_CTRL_MEAS, config[0]) != HAL_OK ||
+        BMP280_WriteRegister(BMP280_REG_CONFIG, config[1]) != HAL_OK) {
+        return HAL_ERROR;
+    }
 
     // Read calibration data
     uint8_t calib[BMP280_CALIB_LENGTH];
@@ -57,14 +77,11 @@ uint8_t BMP280_Init(BMP280_t *bmp) {
     bmp->calib.dig_P7 = (int16_t)(calib[19] << 8 | calib[18]);
     bmp->calib.dig_P8 = (int16_t)(calib[21] << 8 | calib[20]);
     bmp->calib.dig_P9 = (int16_t)(calib[23] << 8 | calib[22]);
+    HAL_Delay(100);
 
-    // Set oversampling and power mode
-    config[0] = BMP280_OSRS_T | BMP280_OSRS_P | BMP280_MODE_NORMAL;
-    config[1] = 0xA0; // Standby time 1000ms, filter off
-    if (BMP280_WriteRegister(BMP280_REG_CTRL_MEAS, config[0]) != HAL_OK ||
-        BMP280_WriteRegister(BMP280_REG_CONFIG, config[1]) != HAL_OK) {
-        return HAL_ERROR;
-    }
+    // Calibrate altitude
+    calibrate_altitude(bmp);
+    printf("BMP280 done altitude calib\r\n");
 
     return HAL_OK;
 }
@@ -81,6 +98,7 @@ static int32_t BMP280_CompensateTemperature(BMP280_t *bmp, int32_t adc_T) {
 // BMP280 Pressure Compensation
 static uint32_t BMP280_CompensatePressure(BMP280_t *bmp, int32_t adc_P) {
     int64_t var1, var2, p;
+#if 1
     var1 = ((int64_t)bmp->t_fine) - 128000;
     var2 = var1 * var1 * (int64_t)bmp->calib.dig_P6;
     var2 = var2 + ((var1 * (int64_t)bmp->calib.dig_P5) << 17);
@@ -94,6 +112,31 @@ static uint32_t BMP280_CompensatePressure(BMP280_t *bmp, int32_t adc_P) {
     var2 = (((int64_t)bmp->calib.dig_P8) * p) >> 19;
     p = ((p + var1 + var2) >> 8) + (((int64_t)bmp->calib.dig_P7) << 4);
     return (uint32_t)p;
+#else
+    var1 = (((int64_t)bmp->t_fine)>>1) - (int64_t)64000;
+      var2 = (((var1>>2) * (var1>>2)) >> 11 ) *((int64_t)bmp->calib.dig_P6);
+      var2 = var2 + ((var1 *((int64_t)bmp->calib.dig_P5))<<1);
+      var2 = (var2>>2) + (((int64_t)bmp->calib.dig_P4)<<16);
+      var1 = (((bmp->calib.dig_P3 * (((var1>>2) * (var1>>2))>>13))>>3) + ((((int64_t)bmp->calib.dig_P2) * var1)>>1))>>18;
+      var1 = ((((32768+var1))*((int64_t)bmp->calib.dig_P1))>>15);
+      if(var1 ==0)
+      {
+        return 0;
+      }
+      p = (1048576.0 - adc_P) - (var2>>12)*3125;
+      if(p < 0x80000000)
+      {
+        p = (p<<1)/((uint64_t)var1);
+      }
+      else
+      {
+        p = (p/(uint64_t)var1)*2;
+      }
+      var1 = (((int64_t)bmp->calib.dig_P9) *((int64_t)(((p>>3)*(p>>3))>>13)))>>12;
+      var2 = (((int64_t)(p>>2))*((int64_t)bmp->calib.dig_P8))>>13;
+      p = (uint64_t)((int64_t)p) +((var1 + var2 + bmp->calib.dig_P7)>>4);
+      return p;
+#endif
 }
 
 //
@@ -116,6 +159,8 @@ void BMP280_Process_data(BMP280_t *bmp) {
 	bmp->temp = BMP280_CompensateTemperature(bmp, adc_T) / 100.f;
 	// Compensate pressure
 	bmp->press = BMP280_CompensatePressure(bmp, adc_P) / 100.0f;
+	// calculate altitude
+	bmp->altitude = 44330.0f * (1.0f - pow((bmp->press / 1013.25f), 0.1903f));
 	return;
 }
 // Read Temperature

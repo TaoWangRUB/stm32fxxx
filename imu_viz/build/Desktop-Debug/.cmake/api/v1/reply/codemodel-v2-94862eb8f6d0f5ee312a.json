@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "imu_viz",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "imu_viz::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imu_viz-Debug-856e8479d7097a1d5cdb.json",
+					"name" : "imu_viz",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imu_viz_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imu_viz_autogen-Debug-12172f9316da73603bfd.json",
+					"name" : "imu_viz_autogen",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/taowang/workspace/STM32CubeIDE/imu_viz/build/Desktop-Debug",
+		"source" : "/home/taowang/workspace/STM32CubeIDE/imu_viz"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 0
+	}
+}

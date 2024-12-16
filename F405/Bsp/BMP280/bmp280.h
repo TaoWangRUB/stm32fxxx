@@ -26,8 +26,8 @@
 #define BMP280_CALIB_LENGTH        24
 
 // Oversampling and power modes
-#define BMP280_OSRS_T              0x20 // Temperature oversampling x1
-#define BMP280_OSRS_P              0x04 // Pressure oversampling x1
+#define BMP280_OSRS_T              0x40 // Temperature oversampling x1
+#define BMP280_OSRS_P              0x14 // Pressure oversampling x1
 #define BMP280_MODE_NORMAL         0x03 // Normal mode
 
 // Structure to store calibration data
@@ -54,6 +54,8 @@ typedef struct {
     uint8_t buff[6];
     float temp;
     float press;
+    float altitude;
+    float altitude_offset;
 } BMP280_t;
 
 // Function prototypes

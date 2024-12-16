@@ -23,6 +23,7 @@
 #include "i2c.h"
 #include "rtc.h"
 #include "usart.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -117,6 +118,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+
   I2C_Scan();
   while (MPU6050_Init(&hi2c1, &MPU6050) == 1);
 
@@ -134,32 +136,6 @@ int main(void)
   ssd1306_WriteString("Hello World", Font_7x10);
   ssd1306_UpdateScreen();
 
-/*
-  IMU_EN_SENSOR_TYPE enMotionSensorType, enPressureType;
-  IMU_ST_ANGLES_DATA stAngles;
-  IMU_ST_SENSOR_DATA stGyroRawData;
-  IMU_ST_SENSOR_DATA stAccelRawData;
-  IMU_ST_SENSOR_DATA stMagnRawData;
-  int32_t s32PressureVal = 0, s32TemperatureVal = 0, s32AltitudeVal = 0;
-
-  imuInit(&enMotionSensorType, &enPressureType);
-  if(IMU_EN_SENSOR_TYPE_ICM20948 == enMotionSensorType)
-  {
-	  printf("Motion sersor is ICM-20948\r\n" );
-  }
-  else
-  {
-	  printf("Motion sersor NULL\r\n");
-  }
-  if(IMU_EN_SENSOR_TYPE_BMP280 == enPressureType)
-  {
-	  printf("Pressure sersor is BMP280\r\n");
-  }
-  else
-  {
-	  printf("Pressure sersor NULL\r\n");
-  }
-*/
   board_button_init();
   board_led_init();
 
@@ -178,6 +154,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
     /* USER CODE END WHILE */
@@ -213,7 +190,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();

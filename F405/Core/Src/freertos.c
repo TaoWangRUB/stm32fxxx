@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "i2c.h"
+#include "usbd_cdc_if.h"
 #include "algo/angle_estimation.h"
 
 /* USER CODE END Includes */
@@ -60,7 +61,7 @@ const osThreadAttr_t buttonTask_attributes = {
 osThreadId_t lcdTaskHandle;
 const osThreadAttr_t lcdTask_attributes = {
   .name = "lcdTask",
-  .stack_size = 256 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for mpu6050Task */
@@ -88,7 +89,7 @@ const osThreadAttr_t taskKalmanFilte_attributes = {
 osThreadId_t bmp280TaskHandle;
 const osThreadAttr_t bmp280Task_attributes = {
   .name = "bmp280Task",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for mutexMpu6050 */
@@ -123,6 +124,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+	MX_USB_DEVICE_Init();
 
   /* USER CODE END Init */
   /* Create the mutex(es) */
@@ -178,7 +180,8 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
+  printf("Waiting for USB...\r\n");
+  osDelay(5000);
   /* USER CODE END RTOS_EVENTS */
 
 }
@@ -193,10 +196,13 @@ void MX_FREERTOS_Init(void) {
 void StartButtonTask(void *argument)
 {
   /* USER CODE BEGIN StartButtonTask */
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+	const TickType_t xInterval = 10;
   /* Infinite loop */
 	uint32_t now;
 	for(;;)
 	{
+		TickType_t start = xTaskGetTickCount();
 	  if(board_button_pressed())
 	  {
 		  board_led_set(GPIO_PIN_SET);
@@ -213,7 +219,13 @@ void StartButtonTask(void *argument)
 			  now++;
 		  }
 	  }
-	  osDelay(10);
+	  /*
+	  TickType_t end = xTaskGetTickCount();
+	  TickType_t dt = (end - start) * portTICK_PERIOD_MS;
+	  if(dt > xInterval)
+		  printf("Button Time: %d > %d ms\r\n", dt, xInterval);
+	  */
+	  vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(xInterval));
 	}
   /* USER CODE END StartButtonTask */
 }
@@ -230,9 +242,12 @@ void StartLcdTask(void *argument)
   /* USER CODE BEGIN StartLcdTask */
 	static uint8_t display = 1;
 	static uint8_t is_pressed = 0;
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+	const TickType_t xInterval = 50;
   /* Infinite loop */
 	for(;;)
 	{
+		TickType_t start = xTaskGetTickCount();
 	  if(board_button_pressed() && !is_pressed)
 	  {
 		  is_pressed = 1;
@@ -252,6 +267,13 @@ void StartLcdTask(void *argument)
 	  		  Display_Accel_Data();
 	  		  break;
 	  }
+	  char tx_buff[128];
+	  sprintf(tx_buff, "%d, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f\r\n",
+			  ++cnt, MPU6050.kalmanRoll[0], MPU6050.kalmanRoll[2], MPU6050.angle[0],
+			  MPU6050.kalmanPitch[0], MPU6050.kalmanPitch[2], -MPU6050.angle[1],
+			  (BMP280.altitude - BMP280.altitude_offset)*100);
+	  CDC_Transmit_FS(tx_buff, strlen(tx_buff));
+	  //printf("%.3f\r\n", cnt*0.05);
 	  /*
 	  printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.acce[0], MPU6050.acce[1], MPU6050.acce[2]);
 	  printf("%.5f, %.5f, %.5f, ", MPU6050.gyro[0], MPU6050.gyro[1], MPU6050.gyro[2]);
@@ -262,12 +284,19 @@ void StartLcdTask(void *argument)
 	  //printf("Temp: %.5f | %.5f\r\n", MPU6050.Temperature, BMP280.temp);
 	  // printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.angle[0], MPU6050.angle[1], MPU6050.angle[2]);
 	  // printf("%.5f, %.5f, %.5f\r\n", ICM20948.angle[1], -ICM20948.angle[0], ICM20948.angle[2]);
-	  printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.kalmanRoll[0], MPU6050.kalmanRoll[2], MPU6050.angle[0]);
-	  printf("%.5f, %.5f, %.5f\r\n", MPU6050.kalmanPitch[0], MPU6050.kalmanPitch[2], MPU6050.angle[1]);
-	  osDelay(50);
+	  //printf("%d, %.5f, %.5f, %.5f, ", ++cnt, MPU6050.kalmanRoll[0], MPU6050.kalmanRoll[2], MPU6050.angle[0]);
+
+	  //printf("%.5f, %.5f, %.5f\r\n", MPU6050.kalmanPitch[0], MPU6050.kalmanPitch[2], MPU6050.angle[1]);
+	  TickType_t endTime = xTaskGetTickCount();  // Measure end time
+	  //printf("Task Execution Time: %d ms\r\n", (endTime - startTime) * portTICK_PERIOD_MS);
+
+	  TickType_t end = xTaskGetTickCount();
+	  TickType_t dt = (end - start) * portTICK_PERIOD_MS;
+	  if(dt > xInterval)
+		  printf("LCD Time: %d > %d ms\r\n", dt, xInterval);
+	  vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(xInterval));
 	}
   /* USER CODE END StartLcdTask */
-
 }
 
 /* USER CODE BEGIN Header_StartTaskMpu6050 */
@@ -280,9 +309,12 @@ void StartLcdTask(void *argument)
 void StartTaskMpu6050(void *argument)
 {
   /* USER CODE BEGIN StartTaskMpu6050 */
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+	const TickType_t xInterval = 20;
   /* Infinite loop */
 	  for(;;)
 	  {
+			TickType_t start = xTaskGetTickCount();
 		  current_i2c_dma_state = I2C_DMA_STATE_MPU6050;
 		  MPU6050_Read_DMA(&hi2c1, &MPU6050);
 		  if (xSemaphoreTake(dmaCompleteSemaphore, portMAX_DELAY) == pdTRUE) {
@@ -290,7 +322,12 @@ void StartTaskMpu6050(void *argument)
 			  MPU6050_Process_Data(&MPU6050);
 			  //printf("MPU6050 Ax: %d Ay: %d Az: %d\r\n", MPU6050.Ax, MPU6050.Ay, MPU6050.Az);
 		  }
-		  osDelay(10);
+		  /*
+		  TickType_t end = xTaskGetTickCount();
+		  TickType_t dt = (end - start) * portTICK_PERIOD_MS;
+		  if(dt > xInterval)
+			  printf("Mpu6050 Task Time: %d > %d ms\r\n", dt, xInterval);*/
+		  vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(xInterval));
 	  }
   /* USER CODE END StartTaskMpu6050 */
 }
@@ -305,9 +342,12 @@ void StartTaskMpu6050(void *argument)
 void StartTaskIcm20948(void *argument)
 {
   /* USER CODE BEGIN StartTaskIcm20948 */
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+	const TickType_t xInterval = 20;
   /* Infinite loop */
 	  for(;;)
 	  {
+			TickType_t start = xTaskGetTickCount();
 		  // first read acc & gyro
 		  current_i2c_dma_state = I2C_DMA_STATE_ICM20948_ACCEL_GYRO;
 		  ICM20948_ReadDMA(&ICM20948);
@@ -322,7 +362,13 @@ void StartTaskIcm20948(void *argument)
 			  ICM20948_Process_Mage_data(&ICM20948);
 		      //printf("ICM20948 Mx: %d My: %d Mz: %d\r\n", ICM20948.mage[0], ICM20948.mage[1], ICM20948.mage[2]);
 		  }
-		  osDelay(10);
+		  /*
+		  TickType_t end = xTaskGetTickCount();
+		  TickType_t dt = (end - start) * portTICK_PERIOD_MS;
+		  if(dt > xInterval)
+			  printf("Icm20948 Time: %d > %d ms\r\n", dt, xInterval);
+		  */
+		  vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(xInterval));
 	  }
   /* USER CODE END StartTaskIcm20948 */
 }
@@ -337,14 +383,23 @@ void StartTaskIcm20948(void *argument)
 void StartTaskKalmanFilter(void *argument)
 {
   /* USER CODE BEGIN StartTaskKalmanFilter */
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+	const TickType_t xInterval = 10;
   /* Infinite loop */
 	  for(;;)
 	  {
+		  TickType_t start = xTaskGetTickCount();
 		  angle_estimation(MPU6050.acce, MPU6050.angle);
 		  angle_estimation(ICM20948.acce, ICM20948.angle);
 		  angle_estimation_kalman(MPU6050.gyro[0], MPU6050.angle[0], MPU6050.kalmanRoll);
-		  angle_estimation_kalman(MPU6050.gyro[1], MPU6050.angle[1], MPU6050.kalmanPitch);
-		  osDelay(10);
+		  angle_estimation_kalman(MPU6050.gyro[1], -MPU6050.angle[1], MPU6050.kalmanPitch);
+		  /*
+		  TickType_t end = xTaskGetTickCount();
+		  TickType_t dt = (end - start) * portTICK_PERIOD_MS;
+		  if(dt > xInterval)
+			  printf("Kalman Task Time: %d > %d ms\r\n", dt, xInterval);
+		  */
+		  vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(xInterval));
 	  }
   /* USER CODE END StartTaskKalmanFilter */
 }
@@ -359,16 +414,29 @@ void StartTaskKalmanFilter(void *argument)
 void StartTaskBmp280(void *argument)
 {
   /* USER CODE BEGIN StartTaskBmp280 */
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+	const TickType_t xInterval = 50;
   /* Infinite loop */
 	for(;;)
 	{
+		TickType_t start = xTaskGetTickCount();
 		current_i2c_dma_state = I2C_DMA_STATE_BMP280;
+
 		//BMP280_ReadTempAndPressure(&BMP280);
+
 		BMP280_Read_DMA(&BMP280);
 		if (xSemaphoreTake(dmaCompleteSemaphore, portMAX_DELAY) == pdTRUE) {
 			BMP280_Process_data(&BMP280);
 		}
-		osDelay(10);
+
+		// osDelay(10);
+		/*
+		TickType_t end = xTaskGetTickCount();
+		TickType_t dt = (end - start) * portTICK_PERIOD_MS;
+		if(dt > xInterval)
+		    printf("Bmp280 Task Time: %d > %d ms\r\n", dt, xInterval);
+		*/
+		vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(xInterval));
 	}
   /* USER CODE END StartTaskBmp280 */
 }
